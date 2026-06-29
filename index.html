@@ -5,7 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>旅買記</title>
 <style>
+:root {
+  --brand: #B5564A;
+  --brand-dark: #94372C;
+  --brand-soft: #FBEEED;
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
+svg.ic { width: 1em; height: 1em; vertical-align: -0.14em; flex-shrink: 0; }
 html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif; }
 body { background: #f5f5f5; }
 
@@ -22,7 +28,7 @@ body { background: #f5f5f5; }
 .page.off-right { transform: translateX(100%); }
 .page.off-left { transform: translateX(-30%); pointer-events: none; }
 
-.header { background: #CC2229; padding: 14px 16px 0; position: sticky; top: 0; z-index: 10; }
+.header { background: var(--brand); padding: 14px 16px 0; position: sticky; top: 0; z-index: 10; }
 .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .app-title { color: #fff; font-size: 18px; font-weight: 500; }
 .rate-badge { background: rgba(255,255,255,0.18); color: #fff; font-size: 12px; padding: 4px 10px; border-radius: 20px; display: flex; align-items: center; gap: 5px; }
@@ -39,7 +45,7 @@ body { background: #f5f5f5; }
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: #CC2229;
+  background: var(--brand);
   color: #fff;
   border: none;
   border-radius: 28px;
@@ -60,7 +66,8 @@ body { background: #f5f5f5; }
 .section-label { font-size: 11px; color: #888; letter-spacing: 0.08em; text-transform: uppercase; margin: 16px 0 8px; display: flex; align-items: center; justify-content: space-between; }
 .section-count { background: #e8e8e8; color: #888; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
 .card { background: #fff; border: 0.5px solid #eee; border-radius: 14px; margin-bottom: 10px; overflow: hidden; display: flex; align-items: stretch; cursor: pointer; }
-.card-img { width: 80px; min-height: 80px; flex-shrink: 0; background: #f0f0f0; display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 28px; }
+.card-img { width: 80px; min-height: 80px; flex-shrink: 0; background: #f0f0f0; display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 28px; color: #c9bdb9; }
+.section-label .ic, .detail-cat .ic { margin-right: 4px; }
 .card-img img { width: 100%; height: 100%; object-fit: cover; }
 .card-body { flex: 1; padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between; min-width: 0; }
 .card-name { font-size: 14px; font-weight: 500; color: #222; line-height: 1.35; margin-bottom: 2px; }
@@ -69,6 +76,13 @@ body { background: #f5f5f5; }
 .price-jpy { font-size: 17px; font-weight: 500; color: #222; }
 .price-unit { font-size: 11px; color: #888; }
 .price-twd { font-size: 12px; color: #888; }
+.card-date { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #aaa; margin-top: 5px; }
+.card-cat { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #888; margin-bottom: 6px; }
+.summary { background: #fff; border: 0.5px solid #eee; border-radius: 14px; padding: 14px 16px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+.summary-label { font-size: 12px; color: #888; margin-bottom: 3px; }
+.summary-jpy { font-size: 24px; font-weight: 600; color: #222; line-height: 1.1; }
+.summary-twd { font-size: 13px; color: #888; margin-top: 3px; }
+.summary-count { font-size: 13px; color: var(--brand-dark); background: var(--brand-soft); padding: 5px 12px; border-radius: 14px; font-weight: 500; }
 .tax-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
 .tax-in { background: #FEF3C7; color: #92400E; }
 .tax-out { background: #E0F2FE; color: #075985; }
@@ -76,31 +90,32 @@ body { background: #f5f5f5; }
 .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
 .empty-text { font-size: 14px; line-height: 1.7; }
 
-.sub-header { background: #CC2229; padding: 14px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
+.sub-header { background: var(--brand); padding: 14px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
 .btn-back { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; padding: 0; display: flex; align-items: center; line-height: 1; }
 .sub-title { color: #fff; font-size: 17px; font-weight: 500; }
 .add-scroll { padding: 16px 16px 40px; }
 
 .photo-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
 .photo-btn { border: 1.5px dashed #ccc; border-radius: 14px; padding: 20px 12px; text-align: center; cursor: pointer; color: #888; font-size: 13px; background: #f0f0f0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.photo-btn .icon { font-size: 28px; color: #CC2229; }
+.photo-btn .icon { font-size: 28px; color: var(--brand); }
 .photo-preview-wrap { border-radius: 14px; overflow: hidden; margin-bottom: 4px; background: #f0f0f0; display: none; }
 .photo-preview-wrap img { width: 100%; max-height: 220px; object-fit: contain; display: block; }
 
 .photo-tip { font-size: 12px; color: #888; margin-top: 8px; padding: 8px 10px; background: #f0f0f0; border-radius: 8px; }
-.btn-retake { display: block; text-align: center; font-size: 13px; color: #CC2229; margin-top: 8px; cursor: pointer; padding: 6px; }
+.btn-retake { display: block; text-align: center; font-size: 13px; color: var(--brand); margin-top: 8px; cursor: pointer; padding: 6px; }
 
 .field-label { font-size: 12px; color: #888; margin: 16px 0 5px; }
 .field-input { width: 100%; padding: 10px 12px; background: #fff; border: 1px solid #ddd; border-radius: 10px; font-size: 15px; color: #222; font-family: inherit; }
-.field-input:focus { outline: none; border-color: #CC2229; }
+.field-input:focus { outline: none; border-color: var(--brand); }
 .twd-hint { font-size: 12px; color: #888; margin-top: 5px; padding: 7px 10px; background: #f0f0f0; border-radius: 6px; }
 .toggle-row { display: flex; gap: 8px; margin-top: 5px; }
 .toggle-btn { flex: 1; padding: 9px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; background: #fff; color: #888; cursor: pointer; font-family: inherit; }
-.toggle-btn.sel { border-color: #CC2229; color: #CC2229; background: #FFF5F5; }
+.toggle-btn.sel { border-color: var(--brand); color: var(--brand-dark); background: var(--brand-soft); }
 .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px; }
 .cat-btn { padding: 8px 2px; border: 1px solid #ddd; border-radius: 10px; font-size: 12px; background: #fff; color: #888; cursor: pointer; text-align: center; font-family: inherit; }
-.cat-btn.sel { border-color: #CC2229; color: #CC2229; background: #FFF5F5; }
-.btn-save { width: 100%; padding: 14px; background: #CC2229; color: #fff; border: none; border-radius: 14px; font-size: 15px; font-weight: 500; margin-top: 24px; cursor: pointer; font-family: inherit; }
+.cat-btn.sel { border-color: var(--brand); color: var(--brand-dark); background: var(--brand-soft); }
+.cat-btn .ic, .tab .ic { margin-right: 3px; }
+.btn-save { width: 100%; padding: 14px; background: var(--brand); color: #fff; border: none; border-radius: 14px; font-size: 15px; font-weight: 500; margin-top: 24px; cursor: pointer; font-family: inherit; }
 
 .detail-img-wrap { background: #f0f0f0; }
 .detail-img-wrap img { width: 100%; max-height: 240px; object-fit: contain; display: block; }
@@ -114,7 +129,7 @@ body { background: #f5f5f5; }
 .info-row { display: flex; justify-content: space-between; font-size: 14px; padding: 9px 0; border-bottom: 0.5px solid #eee; }
 .info-row:last-child { border-bottom: none; }
 .info-label { color: #888; }
-.btn-del { width: 100%; padding: 13px; background: none; border: 1px solid #ddd; border-radius: 14px; font-size: 14px; color: #CC2229; cursor: pointer; margin-top: 16px; font-family: inherit; }
+.btn-del { width: 100%; padding: 13px; background: none; border: 1px solid #ddd; border-radius: 14px; font-size: 14px; color: var(--brand); cursor: pointer; margin-top: 16px; font-family: inherit; }
 </style>
 </head>
 <body>
@@ -139,24 +154,24 @@ body { background: #f5f5f5; }
       </div>
     </div>
     <div class="list-scroll" id="list-items"></div>
-    <button class="fab" onclick="goAdd()">＋ 新增商品</button>
+    <button class="fab" onclick="goAdd()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> 新增商品</button>
   </div>
 
   <div class="page off-right" id="page-add">
     <div class="sub-header">
-      <button class="btn-back" onclick="goList()" aria-label="返回">←</button>
+      <button class="btn-back" onclick="goList()" aria-label="返回"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
       <span class="sub-title" id="add-title">新增商品</span>
     </div>
     <div class="add-scroll">
       <div id="photo-preview-wrap" class="photo-preview-wrap"><img id="preview-img" alt=""></div>
       <div class="photo-picker" id="photo-picker">
-        <div class="photo-btn" onclick="triggerCamera()"><span class="icon">📷</span><span>拍照存證</span></div>
-        <div class="photo-btn" onclick="triggerGallery()"><span class="icon">🖼️</span><span>從相簿選擇</span></div>
+        <div class="photo-btn" onclick="triggerCamera()"><span class="icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span><span>拍照存證</span></div>
+        <div class="photo-btn" onclick="triggerGallery()"><span class="icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/></svg></span><span>從相簿選擇</span></div>
       </div>
       <input type="file" id="file-camera" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
       <input type="file" id="file-gallery" accept="image/*" style="display:none" onchange="handlePhoto(event)">
-      <div id="photo-tip" class="photo-tip" style="display:none">📝 請手動填入下方的商品名稱與價格</div>
-      <div id="retake-btn" class="btn-retake" style="display:none" onclick="resetPhoto()">🔄 重新選擇照片</div>
+      <div id="photo-tip" class="photo-tip" style="display:none"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> 請手動填入下方的商品名稱與價格</div>
+      <div id="retake-btn" class="btn-retake" style="display:none" onclick="resetPhoto()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg> 重新選擇照片</div>
 
       <div class="field-label">商品名稱</div>
       <input class="field-input" id="f-name" placeholder="例：肌研白潤保濕乳液" type="text">
@@ -173,13 +188,13 @@ body { background: #f5f5f5; }
 
       <div class="field-label">分類</div>
       <div class="cat-grid">
-        <button class="cat-btn sel" onclick="setCat('藥妝',this)">💊 藥妝</button>
-        <button class="cat-btn" onclick="setCat('食品',this)">🍜 食品</button>
-        <button class="cat-btn" onclick="setCat('電器',this)">📱 電器</button>
-        <button class="cat-btn" onclick="setCat('服飾',this)">👕 服飾</button>
-        <button class="cat-btn" onclick="setCat('文具',this)">✏️ 文具</button>
-        <button class="cat-btn" onclick="setCat('伴手禮',this)">🎁 伴手禮</button>
-        <button class="cat-btn" onclick="setCat('其他',this)">📦 其他</button>
+        <button class="cat-btn sel" onclick="setCat('藥妝',this)" data-cat="藥妝"></button>
+        <button class="cat-btn" onclick="setCat('食品',this)" data-cat="食品"></button>
+        <button class="cat-btn" onclick="setCat('電器',this)" data-cat="電器"></button>
+        <button class="cat-btn" onclick="setCat('服飾',this)" data-cat="服飾"></button>
+        <button class="cat-btn" onclick="setCat('文具',this)" data-cat="文具"></button>
+        <button class="cat-btn" onclick="setCat('伴手禮',this)" data-cat="伴手禮"></button>
+        <button class="cat-btn" onclick="setCat('其他',this)" data-cat="其他"></button>
       </div>
 
       <div class="field-label">備註（選填）</div>
@@ -191,7 +206,7 @@ body { background: #f5f5f5; }
 
   <div class="page off-right" id="page-detail">
     <div class="sub-header">
-      <button class="btn-back" onclick="goList()" aria-label="返回">←</button>
+      <button class="btn-back" onclick="goList()" aria-label="返回"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
       <span class="sub-title">商品詳細</span>
       <div style="width:32px"></div>
     </div>
@@ -203,7 +218,29 @@ body { background: #f5f5f5; }
 <script>
 const ITEMS_KEY = 'jp_items_v5';
 const RATE_KEY = 'jp_rate_v5';
-const catEmoji = {'藥妝':'💊','食品':'🍜','電器':'📱','服飾':'👕','文具':'✏️','伴手禮':'🎁','其他':'📦'};
+function svgIcon(p) { return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`; }
+const ICON = {
+  pill: svgIcon('<path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/>'),
+  food: svgIcon('<path d="M3 2v7c0 1.1.9 2 2 2a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>'),
+  phone: svgIcon('<rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/>'),
+  shirt: svgIcon('<path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/>'),
+  pen: svgIcon('<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>'),
+  gift: svgIcon('<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/>'),
+  box: svgIcon('<path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>'),
+  camera: svgIcon('<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>'),
+  image: svgIcon('<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/>'),
+  edit: svgIcon('<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>'),
+  refresh: svgIcon('<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/>'),
+  bag: svgIcon('<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>'),
+  trash: svgIcon('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>'),
+  clock: svgIcon('<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>')
+};
+function fmtDate(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleString('zh-TW', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+const catIconName = {'藥妝':'pill','食品':'food','電器':'phone','服飾':'shirt','文具':'pen','伴手禮':'gift','其他':'box'};
+function catSvg(cat) { return ICON[catIconName[cat] || 'box']; }
 
 let rate = parseFloat(localStorage.getItem(RATE_KEY)) || 0.212;
 let items = [];
@@ -274,7 +311,7 @@ function goAdd(item) {
 
   selCat = item ? item.cat : '藥妝';
   document.querySelectorAll('.cat-btn').forEach(b => {
-    b.classList.toggle('sel', b.textContent.trim().endsWith(selCat));
+    b.classList.toggle('sel', b.dataset.cat === selCat);
   });
 
   showPage('page-add');
@@ -379,10 +416,10 @@ function openDetail(id) {
   const taxLabel = item.tax === 'in' ? '含稅' : '未稅';
   const taxClass = item.tax === 'in' ? 'tax-in' : 'tax-out';
   document.getElementById('detail-inner').innerHTML = `
-    <div class="detail-img-wrap">${item.photo ? `<img src="${item.photo}" alt="">` : `<div class="detail-placeholder">${catEmoji[item.cat]||'📦'}</div>`}</div>
+    <div class="detail-img-wrap">${item.photo ? `<img src="${item.photo}" alt="">` : `<div class="detail-placeholder">${catSvg(item.cat)}</div>`}</div>
     <div class="detail-content">
       <div class="detail-name">${escapeHtml(item.name)}</div>
-      <div class="detail-cat">${catEmoji[item.cat]||''} ${item.cat}</div>
+      <div class="detail-cat">${catSvg(item.cat)} ${item.cat}</div>
       <div class="price-block">
         <div class="big-jpy">¥${item.price.toLocaleString()} <span class="tax-badge ${taxClass}" style="font-size:12px;vertical-align:middle">${taxLabel}</span></div>
         <div class="big-twd">≈ NT$${twd.toLocaleString()} <span style="font-size:11px;opacity:0.6">（匯率 ${item.rate}）</span></div>
@@ -390,8 +427,8 @@ function openDetail(id) {
       ${item.note ? `<div class="info-row"><span class="info-label">備註</span><span>${escapeHtml(item.note)}</span></div>` : ''}
       <div class="info-row"><span class="info-label">記錄時間</span><span>${date}</span></div>
       <div style="display:flex; gap:8px; margin-top:16px;">
-        <button class="btn-del" style="margin-top:0; flex:1; color:#222;" data-edit-id="${item.id}">✏️ 編輯</button>
-        <button class="btn-del" style="margin-top:0; flex:1;" data-delete-id="${item.id}">🗑️ 刪除</button>
+        <button class="btn-del" style="margin-top:0; flex:1; color:#222;" data-edit-id="${item.id}">${ICON.edit} 編輯</button>
+        <button class="btn-del" style="margin-top:0; flex:1;" data-delete-id="${item.id}">${ICON.trash} 刪除</button>
       </div>
     </div>`;
   showPage('page-detail');
@@ -417,30 +454,62 @@ function deleteItem(id) {
   goList();
 }
 
+function dayStart(iso) { const d = new Date(iso || Date.now()); d.setHours(0,0,0,0); return d.getTime(); }
+function dayLabel(ms) {
+  const d = new Date(ms);
+  const wd = ['日','一','二','三','四','五','六'][d.getDay()];
+  return `${d.getMonth()+1}/${d.getDate()} (${wd})`;
+}
+function fmtTime(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit'});
+}
+
 function renderList() {
   const el = document.getElementById('list-items');
   const filtered = currentCat === '全部' ? items : items.filter(i => i.cat === currentCat);
   if (!filtered.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🛍️</div><div class="empty-text">還沒有記錄<br>點下方按鈕新增第一個商品！</div></div>`;
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">${ICON.bag}</div><div class="empty-text">還沒有記錄<br>點下方按鈕新增第一個商品！</div></div>`;
     return;
   }
+
+  // 合計花費（依目前分類篩選連動）
+  const totalJpy = filtered.reduce((s, i) => s + i.price, 0);
+  const totalTwd = filtered.reduce((s, i) => s + Math.round(i.price * (i.rate || rate)), 0);
+  let html = `<div class="summary">
+    <div>
+      <div class="summary-label">合計花費${currentCat === '全部' ? '' : '・' + currentCat}</div>
+      <div class="summary-jpy">¥${totalJpy.toLocaleString()}</div>
+      <div class="summary-twd">≈ NT$${totalTwd.toLocaleString()}</div>
+    </div>
+    <div class="summary-count">${filtered.length} 件</div>
+  </div>`;
+
+  // 以全部商品最早一天為「第 1 天」基準
+  const tripStart = items.reduce((m, i) => Math.min(m, dayStart(i.time)), Infinity);
+
+  // 依日期分組
   const groups = {};
-  filtered.forEach(i => { if (!groups[i.cat]) groups[i.cat]=[]; groups[i.cat].push(i); });
-  let html = '';
-  Object.entries(groups).forEach(([cat, group]) => {
-    html += `<div class="section-label">${catEmoji[cat]||'📦'} ${cat}<span class="section-count">${group.length} 件</span></div>`;
+  filtered.forEach(i => { const k = dayStart(i.time); (groups[k] = groups[k] || []).push(i); });
+  const dayKeys = Object.keys(groups).map(Number).sort((a, b) => a - b);
+
+  dayKeys.forEach(k => {
+    const dayNum = Math.round((k - tripStart) / 86400000) + 1;
+    const group = groups[k].sort((a, b) => new Date(a.time) - new Date(b.time));
+    html += `<div class="section-label"><span>${ICON.clock} 第 ${dayNum} 天・${dayLabel(k)}</span><span class="section-count">${group.length} 件</span></div>`;
     group.forEach(item => {
       const twd = Math.round(item.price * (item.rate || rate));
       html += `<div class="card" onclick="openDetail(${item.id})">
-        <div class="card-img">${item.photo ? `<img src="${item.photo}" alt="">` : catEmoji[item.cat]||'📦'}</div>
+        <div class="card-img">${item.photo ? `<img src="${item.photo}" alt="">` : catSvg(item.cat)}</div>
         <div class="card-body">
           <div class="card-name">${escapeHtml(item.name)}</div>
-          ${item.note ? `<div class="card-sub">${escapeHtml(item.note)}</div>` : ''}
+          <div class="card-cat">${catSvg(item.cat)} ${item.cat}${item.note ? ` ・ ${escapeHtml(item.note)}` : ''}</div>
           <div class="card-prices">
             <span class="price-jpy">¥${item.price.toLocaleString()}<span class="price-unit"> JPY</span></span>
             <span class="tax-badge ${item.tax==='in'?'tax-in':'tax-out'}">${item.tax==='in'?'含稅':'未稅'}</span>
             <span class="price-twd">≈ NT$${twd.toLocaleString()}</span>
           </div>
+          ${item.time ? `<div class="card-date">${ICON.clock} ${fmtTime(item.time)}</div>` : ''}
         </div>
       </div>`;
     });
@@ -448,6 +517,14 @@ function renderList() {
   el.innerHTML = html;
 }
 
+function fillCatButtons() {
+  document.querySelectorAll('.cat-btn').forEach(b => {
+    const cat = b.dataset.cat;
+    b.innerHTML = `${catSvg(cat)} ${cat}`;
+  });
+}
+
+fillCatButtons();
 fetchRate();
 renderList();
 </script>
