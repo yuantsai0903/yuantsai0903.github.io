@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>旅買記</title>
+<style>
+:root {
+  --brand: #B5564A;
+  --brand-dark: #94372C;
+  --brand-soft: #FBEEED;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+svg.ic { width: 1em; height: 1em; vertical-align: -0.14em; flex-shrink: 0; }
+html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif; }
+body { background: #f5f5f5; }
+
+.app {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  background: #f5f5f5;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+.page { position: absolute; inset: 0; background: #f5f5f5; transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; min-height: 100vh; }
+.page.off-right { transform: translateX(100%); }
+.page.off-left { transform: translateX(-30%); pointer-events: none; }
+
+.header { background: var(--brand); padding: 14px 16px 0; position: sticky; top: 0; z-index: 10; }
+.header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.app-title { color: #fff; font-size: 18px; font-weight: 500; }
+.rate-badge { background: rgba(255,255,255,0.18); color: #fff; font-size: 12px; padding: 4px 10px; border-radius: 20px; display: flex; align-items: center; gap: 5px; }
+.rate-dot { width: 6px; height: 6px; border-radius: 50%; background: #7FE5A0; }
+.tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { color: rgba(255,255,255,0.65); font-size: 13px; padding: 4px 12px; border-radius: 20px; white-space: nowrap; border: 1px solid transparent; cursor: pointer; background: none; }
+.tab.active { background: rgba(255,255,255,0.22); color: #fff; border-color: rgba(255,255,255,0.3); }
+
+.list-scroll { padding: 12px 14px 90px; }
+
+.fab {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: 28px;
+  padding: 14px 32px;
+  font-size: 15px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  z-index: 20;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.section-label { font-size: 11px; color: #888; letter-spacing: 0.08em; text-transform: uppercase; margin: 16px 0 8px; display: flex; align-items: center; justify-content: space-between; }
+.section-count { background: #e8e8e8; color: #888; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+.card { background: #fff; border: 0.5px solid #eee; border-radius: 14px; margin-bottom: 10px; overflow: hidden; display: flex; align-items: stretch; cursor: pointer; }
+.card-img { width: 80px; min-height: 80px; flex-shrink: 0; background: #f0f0f0; display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 28px; color: #c9bdb9; }
+.section-label .ic, .detail-cat .ic { margin-right: 4px; }
+.card-img img { width: 100%; height: 100%; object-fit: cover; }
+.card-body { flex: 1; padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between; min-width: 0; }
+.card-name { font-size: 14px; font-weight: 500; color: #222; line-height: 1.35; margin-bottom: 2px; }
+.card-sub { font-size: 12px; color: #888; margin-bottom: 6px; }
+.card-prices { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.price-jpy { font-size: 17px; font-weight: 500; color: #222; }
+.price-unit { font-size: 11px; color: #888; }
+.price-twd { font-size: 12px; color: #888; }
+.card-date { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #aaa; margin-top: 5px; }
+.card-cat { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #888; margin-bottom: 6px; }
+.summary { background: #fff; border: 0.5px solid #eee; border-radius: 14px; padding: 14px 16px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
+.summary-label { font-size: 12px; color: #888; margin-bottom: 3px; }
+.summary-jpy { font-size: 24px; font-weight: 600; color: #222; line-height: 1.1; }
+.summary-twd { font-size: 13px; color: #888; margin-top: 3px; }
+.summary-count { font-size: 13px; color: var(--brand-dark); background: var(--brand-soft); padding: 5px 12px; border-radius: 14px; font-weight: 500; }
+.tax-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
+.tax-in { background: #FEF3C7; color: #92400E; }
+.tax-out { background: #E0F2FE; color: #075985; }
+.empty-state { text-align: center; padding: 60px 24px; color: #888; }
+.empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+.empty-text { font-size: 14px; line-height: 1.7; }
+
+.sub-header { background: var(--brand); padding: 14px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
+.btn-back { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; padding: 0; display: flex; align-items: center; line-height: 1; }
+.sub-title { color: #fff; font-size: 17px; font-weight: 500; }
+.add-scroll { padding: 16px 16px 40px; }
+
+.photo-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
+.photo-btn { border: 1.5px dashed #ccc; border-radius: 14px; padding: 20px 12px; text-align: center; cursor: pointer; color: #888; font-size: 13px; background: #f0f0f0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.photo-btn .icon { font-size: 28px; color: var(--brand); }
+.photo-preview-wrap { border-radius: 14px; overflow: hidden; margin-bottom: 4px; background: #f0f0f0; display: none; }
+.photo-preview-wrap img { width: 100%; max-height: 220px; object-fit: contain; display: block; }
+
+.photo-tip { font-size: 12px; color: #888; margin-top: 8px; padding: 8px 10px; background: #f0f0f0; border-radius: 8px; }
+.btn-retake { display: block; text-align: center; font-size: 13px; color: var(--brand); margin-top: 8px; cursor: pointer; padding: 6px; }
+
+.field-label { font-size: 12px; color: #888; margin: 16px 0 5px; }
+.field-input { width: 100%; padding: 10px 12px; background: #fff; border: 1px solid #ddd; border-radius: 10px; font-size: 15px; color: #222; font-family: inherit; }
+.field-input:focus { outline: none; border-color: var(--brand); }
+.twd-hint { font-size: 12px; color: #888; margin-top: 5px; padding: 7px 10px; background: #f0f0f0; border-radius: 6px; }
+.toggle-row { display: flex; gap: 8px; margin-top: 5px; }
+.toggle-btn { flex: 1; padding: 9px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; background: #fff; color: #888; cursor: pointer; font-family: inherit; }
+.toggle-btn.sel { border-color: var(--brand); color: var(--brand-dark); background: var(--brand-soft); }
+.cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px; }
+.cat-btn { padding: 8px 2px; border: 1px solid #ddd; border-radius: 10px; font-size: 12px; background: #fff; color: #888; cursor: pointer; text-align: center; font-family: inherit; }
+.cat-btn.sel { border-color: var(--brand); color: var(--brand-dark); background: var(--brand-soft); }
+.cat-btn .ic, .tab .ic { margin-right: 3px; }
+.btn-save { width: 100%; padding: 14px; background: var(--brand); color: #fff; border: none; border-radius: 14px; font-size: 15px; font-weight: 500; margin-top: 24px; cursor: pointer; font-family: inherit; }
+
+.detail-img-wrap { background: #f0f0f0; }
+.detail-img-wrap img { width: 100%; max-height: 240px; object-fit: contain; display: block; }
+.detail-placeholder { height: 140px; display: flex; align-items: center; justify-content: center; font-size: 56px; opacity: 0.3; }
+.detail-content { padding: 16px; }
+.detail-name { font-size: 20px; font-weight: 500; margin-bottom: 4px; color: #222; }
+.detail-cat { font-size: 13px; color: #888; margin-bottom: 14px; }
+.price-block { background: #f0f0f0; border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+.big-jpy { font-size: 30px; font-weight: 500; color: #222; }
+.big-twd { font-size: 15px; color: #888; margin-top: 4px; }
+.info-row { display: flex; justify-content: space-between; font-size: 14px; padding: 9px 0; border-bottom: 0.5px solid #eee; }
+.info-row:last-child { border-bottom: none; }
+.info-label { color: #888; }
+.btn-del { width: 100%; padding: 13px; background: none; border: 1px solid #ddd; border-radius: 14px; font-size: 14px; color: var(--brand); cursor: pointer; margin-top: 16px; font-family: inherit; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="page" id="page-list">
+    <div class="header">
+      <div class="header-top">
+        <span class="app-title">旅買記</span>
+        <div class="rate-badge"><span class="rate-dot"></span><span id="rate-txt">載入中...</span></div>
+      </div>
+      <div class="tabs">
+        <button class="tab active" onclick="filterCat('全部',this)">全部</button>
+        <button class="tab" onclick="filterCat('藥妝',this)">藥妝</button>
+        <button class="tab" onclick="filterCat('食品',this)">食品</button>
+        <button class="tab" onclick="filterCat('電器',this)">電器</button>
+        <button class="tab" onclick="filterCat('服飾',this)">服飾</button>
+        <button class="tab" onclick="filterCat('文具',this)">文具</button>
+        <button class="tab" onclick="filterCat('伴手禮',this)">伴手禮</button>
+        <button class="tab" onclick="filterCat('其他',this)">其他</button>
+      </div>
+    </div>
+    <div class="list-scroll" id="list-items"></div>
+    <button class="fab" onclick="goAdd()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> 新增商品</button>
+  </div>
+
+  <div class="page off-right" id="page-add">
+    <div class="sub-header">
+      <button class="btn-back" onclick="goList()" aria-label="返回"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+      <span class="sub-title" id="add-title">新增商品</span>
+    </div>
+    <div class="add-scroll">
+      <div id="photo-preview-wrap" class="photo-preview-wrap"><img id="preview-img" alt=""></div>
+      <div class="photo-picker" id="photo-picker">
+        <div class="photo-btn" onclick="triggerCamera()"><span class="icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></span><span>拍照存證</span></div>
+        <div class="photo-btn" onclick="triggerGallery()"><span class="icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/></svg></span><span>從相簿選擇</span></div>
+      </div>
+      <input type="file" id="file-camera" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
+      <input type="file" id="file-gallery" accept="image/*" style="display:none" onchange="handlePhoto(event)">
+      <div id="photo-tip" class="photo-tip" style="display:none"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> 請手動填入下方的商品名稱與價格</div>
+      <div id="retake-btn" class="btn-retake" style="display:none" onclick="resetPhoto()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg> 重新選擇照片</div>
+
+      <div class="field-label">商品名稱</div>
+      <input class="field-input" id="f-name" placeholder="例：肌研白潤保濕乳液" type="text">
+
+      <div class="field-label">日幣價格（¥）</div>
+      <input class="field-input" id="f-price" placeholder="例：1280" type="number" inputmode="numeric" oninput="updateTWD()">
+      <div class="twd-hint" id="twd-hint">輸入價格後顯示台幣換算</div>
+
+      <div class="field-label">稅別</div>
+      <div class="toggle-row">
+        <button class="toggle-btn sel" id="t-in" onclick="setTax('in')">含稅</button>
+        <button class="toggle-btn" id="t-out" onclick="setTax('out')">未稅</button>
+      </div>
+
+      <div class="field-label">分類</div>
+      <div class="cat-grid">
+        <button class="cat-btn sel" onclick="setCat('藥妝',this)" data-cat="藥妝"></button>
+        <button class="cat-btn" onclick="setCat('食品',this)" data-cat="食品"></button>
+        <button class="cat-btn" onclick="setCat('電器',this)" data-cat="電器"></button>
+        <button class="cat-btn" onclick="setCat('服飾',this)" data-cat="服飾"></button>
+        <button class="cat-btn" onclick="setCat('文具',this)" data-cat="文具"></button>
+        <button class="cat-btn" onclick="setCat('伴手禮',this)" data-cat="伴手禮"></button>
+        <button class="cat-btn" onclick="setCat('其他',this)" data-cat="其他"></button>
+      </div>
+
+      <div class="field-label">備註（選填）</div>
+      <input class="field-input" id="f-note" placeholder="例：松本清二樓有看到">
+
+      <button class="btn-save" id="save-btn" onclick="saveItem()">儲存商品</button>
+    </div>
+  </div>
+
+  <div class="page off-right" id="page-detail">
+    <div class="sub-header">
+      <button class="btn-back" onclick="goList()" aria-label="返回"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+      <span class="sub-title">商品詳細</span>
+      <div style="width:32px"></div>
+    </div>
+    <div id="detail-inner"></div>
+  </div>
+
+</div>
+
+<script>
+const ITEMS_KEY = 'jp_items_v5';
+const RATE_KEY = 'jp_rate_v5';
+function svgIcon(p) { return `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`; }
+const ICON = {
+  pill: svgIcon('<path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/>'),
+  food: svgIcon('<path d="M3 2v7c0 1.1.9 2 2 2a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>'),
+  phone: svgIcon('<rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/>'),
+  shirt: svgIcon('<path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/>'),
+  pen: svgIcon('<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>'),
+  gift: svgIcon('<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/>'),
+  box: svgIcon('<path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>'),
+  camera: svgIcon('<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>'),
+  image: svgIcon('<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/>'),
+  edit: svgIcon('<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>'),
+  refresh: svgIcon('<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/>'),
+  bag: svgIcon('<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>'),
+  trash: svgIcon('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>'),
+  clock: svgIcon('<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>')
+};
+function fmtDate(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleString('zh-TW', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+const catIconName = {'藥妝':'pill','食品':'food','電器':'phone','服飾':'shirt','文具':'pen','伴手禮':'gift','其他':'box'};
+function catSvg(cat) { return ICON[catIconName[cat] || 'box']; }
+
+let rate = parseFloat(localStorage.getItem(RATE_KEY)) || 0.212;
+let items = [];
+let currentCat = '全部';
+let selTax = 'in';
+let selCat = '藥妝';
+let photoDataUrl = null;
+let editingId = null;
+
+try { items = JSON.parse(localStorage.getItem(ITEMS_KEY) || '[]'); } catch(e) {}
+
+function save() { try { localStorage.setItem(ITEMS_KEY, JSON.stringify(items)); } catch(e) {} }
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function fetchRate() {
+  try {
+    const r = await fetch('https://open.er-api.com/v6/latest/JPY');
+    const d = await r.json();
+    if (d.rates && d.rates.TWD) { rate = parseFloat(d.rates.TWD.toFixed(4)); localStorage.setItem(RATE_KEY, rate); }
+  } catch(e) {}
+  document.getElementById('rate-txt').textContent = '1 JPY = ' + rate + ' TWD';
+}
+
+function showPage(id) {
+  ['page-list','page-add','page-detail'].forEach(p => {
+    const el = document.getElementById(p);
+    if (p === id) { el.classList.remove('off-right','off-left'); }
+    else if (id !== 'page-list' && p === 'page-list') { el.classList.add('off-left'); el.classList.remove('off-right'); }
+    else { el.classList.add('off-right'); el.classList.remove('off-left'); }
+  });
+}
+
+function goList() { showPage('page-list'); renderList(); }
+
+function goAdd(item) {
+  editingId = item ? item.id : null;
+  document.getElementById('add-title').textContent = item ? '編輯商品' : '新增商品';
+  document.getElementById('save-btn').textContent = item ? '儲存修改' : '儲存商品';
+
+  document.getElementById('f-name').value = item ? item.name : '';
+  document.getElementById('f-price').value = item ? item.price : '';
+  document.getElementById('f-note').value = item ? (item.note || '') : '';
+  updateTWD();
+
+  photoDataUrl = item ? item.photo : null;
+  if (photoDataUrl) {
+    document.getElementById('preview-img').src = photoDataUrl;
+    document.getElementById('photo-preview-wrap').style.display = 'block';
+    document.getElementById('photo-picker').style.display = 'none';
+    document.getElementById('photo-tip').style.display = 'block';
+    document.getElementById('retake-btn').style.display = 'block';
+  } else {
+    document.getElementById('photo-tip').style.display = 'none';
+    document.getElementById('retake-btn').style.display = 'none';
+    document.getElementById('photo-preview-wrap').style.display = 'none';
+    document.getElementById('photo-picker').style.display = 'grid';
+  }
+  document.getElementById('file-camera').value = '';
+  document.getElementById('file-gallery').value = '';
+
+  selTax = item ? item.tax : 'in';
+  document.getElementById('t-in').classList.toggle('sel', selTax === 'in');
+  document.getElementById('t-out').classList.toggle('sel', selTax === 'out');
+
+  selCat = item ? item.cat : '藥妝';
+  document.querySelectorAll('.cat-btn').forEach(b => {
+    b.classList.toggle('sel', b.dataset.cat === selCat);
+  });
+
+  showPage('page-add');
+}
+
+function triggerCamera() { document.getElementById('file-camera').click(); }
+function triggerGallery() { document.getElementById('file-gallery').click(); }
+
+function filterCat(cat, btn) {
+  currentCat = cat;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderList();
+}
+
+function setTax(t) {
+  selTax = t;
+  document.getElementById('t-in').classList.toggle('sel', t==='in');
+  document.getElementById('t-out').classList.toggle('sel', t==='out');
+}
+
+function setCat(cat, btn) {
+  selCat = cat;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+function updateTWD() {
+  const p = parseFloat(document.getElementById('f-price').value);
+  document.getElementById('twd-hint').textContent = (p > 0) ? '≈ NT$' + Math.round(p * rate).toLocaleString() + ' 台幣' : '輸入價格後顯示台幣換算';
+}
+
+function handlePhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    photoDataUrl = ev.target.result;
+    const previewImg = document.getElementById('preview-img');
+    previewImg.src = photoDataUrl;
+    document.getElementById('photo-preview-wrap').style.display = 'block';
+    document.getElementById('photo-picker').style.display = 'none';
+    document.getElementById('photo-tip').style.display = 'block';
+    document.getElementById('retake-btn').style.display = 'block';
+    document.getElementById('f-name').focus();
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetPhoto() {
+  photoDataUrl = null;
+  document.getElementById('photo-preview-wrap').style.display = 'none';
+  document.getElementById('photo-picker').style.display = 'grid';
+  document.getElementById('photo-tip').style.display = 'none';
+  document.getElementById('retake-btn').style.display = 'none';
+  document.getElementById('file-camera').value = '';
+  document.getElementById('file-gallery').value = '';
+}
+
+function saveItem() {
+  const name = document.getElementById('f-name').value.trim();
+  const price = parseFloat(document.getElementById('f-price').value);
+  if (!name) { alert('請輸入商品名稱'); return; }
+  if (!price || price <= 0) { alert('請輸入正確的日幣價格'); return; }
+
+  let photo = null;
+  if (photoDataUrl) {
+    try {
+      const canvas = document.createElement('canvas');
+      const img = document.getElementById('preview-img');
+      const MAX = 600;
+      let w = img.naturalWidth, h = img.naturalHeight;
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      photo = canvas.toDataURL('image/jpeg', 0.6);
+    } catch(e) { photo = photoDataUrl; }
+  }
+
+  const note = document.getElementById('f-note').value.trim();
+
+  if (editingId) {
+    const idx = items.findIndex(i => i.id === editingId);
+    if (idx !== -1) {
+      items[idx] = { ...items[idx], name, price, tax: selTax, cat: selCat, note, photo };
+    }
+    editingId = null;
+    save();
+    openDetail(items[idx].id);
+  } else {
+    items.unshift({ id: Date.now(), name, price, tax: selTax, cat: selCat, note, photo, rate, time: new Date().toISOString() });
+    save();
+    goList();
+  }
+}
+
+function openDetail(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  const twd = Math.round(item.price * (item.rate || rate));
+  const date = new Date(item.time).toLocaleString('zh-TW', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  const taxLabel = item.tax === 'in' ? '含稅' : '未稅';
+  const taxClass = item.tax === 'in' ? 'tax-in' : 'tax-out';
+  document.getElementById('detail-inner').innerHTML = `
+    <div class="detail-img-wrap">${item.photo ? `<img src="${item.photo}" alt="">` : `<div class="detail-placeholder">${catSvg(item.cat)}</div>`}</div>
+    <div class="detail-content">
+      <div class="detail-name">${escapeHtml(item.name)}</div>
+      <div class="detail-cat">${catSvg(item.cat)} ${item.cat}</div>
+      <div class="price-block">
+        <div class="big-jpy">¥${item.price.toLocaleString()} <span class="tax-badge ${taxClass}" style="font-size:12px;vertical-align:middle">${taxLabel}</span></div>
+        <div class="big-twd">≈ NT$${twd.toLocaleString()} <span style="font-size:11px;opacity:0.6">（匯率 ${item.rate}）</span></div>
+      </div>
+      ${item.note ? `<div class="info-row"><span class="info-label">備註</span><span>${escapeHtml(item.note)}</span></div>` : ''}
+      <div class="info-row"><span class="info-label">記錄時間</span><span>${date}</span></div>
+      <div style="display:flex; gap:8px; margin-top:16px;">
+        <button class="btn-del" style="margin-top:0; flex:1; color:#222;" data-edit-id="${item.id}">${ICON.edit} 編輯</button>
+        <button class="btn-del" style="margin-top:0; flex:1;" data-delete-id="${item.id}">${ICON.trash} 刪除</button>
+      </div>
+    </div>`;
+  showPage('page-detail');
+
+  const editBtn = document.querySelector('[data-edit-id]');
+  if (editBtn) editBtn.addEventListener('click', () => {
+    const target = items.find(i => i.id === Number(editBtn.dataset.editId));
+    if (target) goAdd(target);
+  });
+
+  const delBtn = document.querySelector('[data-delete-id]');
+  if (delBtn) delBtn.addEventListener('click', () => {
+    deleteItem(Number(delBtn.dataset.deleteId));
+  });
+}
+
+function deleteItem(id) {
+  const item = items.find(i => i.id === id);
+  const label = item ? `「${escapeHtml(item.name)}」` : '此商品';
+  if (!confirm(`確定要刪除 ${label} 嗎？刪除後無法復原。`)) return;
+  items = items.filter(i => i.id !== id);
+  save();
+  goList();
+}
+
+function dayStart(iso) { const d = new Date(iso || Date.now()); d.setHours(0,0,0,0); return d.getTime(); }
+function dayLabel(ms) {
+  const d = new Date(ms);
+  const wd = ['日','一','二','三','四','五','六'][d.getDay()];
+  return `${d.getMonth()+1}/${d.getDate()} (${wd})`;
+}
+function fmtTime(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit'});
+}
+
+function renderList() {
+  const el = document.getElementById('list-items');
+  const filtered = currentCat === '全部' ? items : items.filter(i => i.cat === currentCat);
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">${ICON.bag}</div><div class="empty-text">還沒有記錄<br>點下方按鈕新增第一個商品！</div></div>`;
+    return;
+  }
+
+  // 合計花費（依目前分類篩選連動）
+  const totalJpy = filtered.reduce((s, i) => s + i.price, 0);
+  const totalTwd = filtered.reduce((s, i) => s + Math.round(i.price * (i.rate || rate)), 0);
+  let html = `<div class="summary">
+    <div>
+      <div class="summary-label">合計花費${currentCat === '全部' ? '' : '・' + currentCat}</div>
+      <div class="summary-jpy">¥${totalJpy.toLocaleString()}</div>
+      <div class="summary-twd">≈ NT$${totalTwd.toLocaleString()}</div>
+    </div>
+    <div class="summary-count">${filtered.length} 件</div>
+  </div>`;
+
+  // 以全部商品最早一天為「第 1 天」基準
+  const tripStart = items.reduce((m, i) => Math.min(m, dayStart(i.time)), Infinity);
+
+  // 依日期分組
+  const groups = {};
+  filtered.forEach(i => { const k = dayStart(i.time); (groups[k] = groups[k] || []).push(i); });
+  const dayKeys = Object.keys(groups).map(Number).sort((a, b) => a - b);
+
+  dayKeys.forEach(k => {
+    const dayNum = Math.round((k - tripStart) / 86400000) + 1;
+    const group = groups[k].sort((a, b) => new Date(a.time) - new Date(b.time));
+    html += `<div class="section-label"><span>${ICON.clock} 第 ${dayNum} 天・${dayLabel(k)}</span><span class="section-count">${group.length} 件</span></div>`;
+    group.forEach(item => {
+      const twd = Math.round(item.price * (item.rate || rate));
+      html += `<div class="card" onclick="openDetail(${item.id})">
+        <div class="card-img">${item.photo ? `<img src="${item.photo}" alt="">` : catSvg(item.cat)}</div>
+        <div class="card-body">
+          <div class="card-name">${escapeHtml(item.name)}</div>
+          <div class="card-cat">${catSvg(item.cat)} ${item.cat}${item.note ? ` ・ ${escapeHtml(item.note)}` : ''}</div>
+          <div class="card-prices">
+            <span class="price-jpy">¥${item.price.toLocaleString()}<span class="price-unit"> JPY</span></span>
+            <span class="tax-badge ${item.tax==='in'?'tax-in':'tax-out'}">${item.tax==='in'?'含稅':'未稅'}</span>
+            <span class="price-twd">≈ NT$${twd.toLocaleString()}</span>
+          </div>
+          ${item.time ? `<div class="card-date">${ICON.clock} ${fmtTime(item.time)}</div>` : ''}
+        </div>
+      </div>`;
+    });
+  });
+  el.innerHTML = html;
+}
+
+function fillCatButtons() {
+  document.querySelectorAll('.cat-btn').forEach(b => {
+    const cat = b.dataset.cat;
+    b.innerHTML = `${catSvg(cat)} ${cat}`;
+  });
+}
+
+fillCatButtons();
+fetchRate();
+renderList();
+</script>
+</body>
+</html>
