@@ -344,6 +344,8 @@ function fmtDate(iso) {
 }
 const catIconName = {'藥妝':'pill','食品':'food','電器':'phone','服飾':'shirt','文具':'pen','伴手禮':'gift','玩具':'toy','其他':'box'};
 function catSvg(cat) { return ICON[catIconName[cat] || 'box']; }
+// 照片解碼失敗（破圖）時，改用分類 icon 取代，避免露出破圖佔位符
+function imgFallback(el, cat) { const p = el.parentElement; if (p) p.innerHTML = catSvg(cat); }
 
 let rate = parseFloat(localStorage.getItem(RATE_KEY)) || 0.212;
 let items = [];
@@ -600,16 +602,22 @@ function saveItem() {
 
   let photo = null;
   if (photoDataUrl) {
-    try {
-      const canvas = document.createElement('canvas');
-      const img = document.getElementById('preview-img');
-      const MAX = 600;
-      let w = img.naturalWidth, h = img.naturalHeight;
-      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      photo = canvas.toDataURL('image/jpeg', 0.6);
-    } catch(e) { photo = photoDataUrl; }
+    const img = document.getElementById('preview-img');
+    // 圖片尚未成功解碼（naturalWidth 為 0）時不硬壓，直接保留原圖，避免產生壞掉的空圖
+    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+      try {
+        const canvas = document.createElement('canvas');
+        const MAX = 600;
+        let w = img.naturalWidth, h = img.naturalHeight;
+        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const out = canvas.toDataURL('image/jpeg', 0.6);
+        photo = (out && out.length > 100) ? out : photoDataUrl;
+      } catch(e) { photo = photoDataUrl; }
+    } else {
+      photo = photoDataUrl;
+    }
   }
 
   const note = document.getElementById('f-note').value.trim();
@@ -639,7 +647,7 @@ function openDetail(id) {
   const taxLabel = item.tax === 'in' ? '含稅' : '未稅';
   const taxClass = item.tax === 'in' ? 'tax-in' : 'tax-out';
   document.getElementById('detail-inner').innerHTML = `
-    <div class="detail-img-wrap">${item.photo ? `<img src="${item.photo}" alt="">` : `<div class="detail-placeholder">${catSvg(item.cat)}</div>`}</div>
+    <div class="detail-img-wrap">${item.photo ? `<img src="${item.photo}" alt="" onerror="this.outerHTML='<div class=\\'detail-placeholder\\'>'+catSvg('${item.cat}')+'</div>'">` : `<div class="detail-placeholder">${catSvg(item.cat)}</div>`}</div>
     <div class="detail-content">
       <div class="detail-name">${escapeHtml(item.name)}</div>
       <div class="detail-cat">${catSvg(item.cat)} ${item.cat}</div>
@@ -737,7 +745,7 @@ function renderList() {
       const unitTwd = Math.round(item.price * (item.rate || rate));
       const multi = qty > 1;
       html += `<div class="card" onclick="openDetail(${item.id})">
-        <div class="card-img">${item.photo ? `<img src="${item.photo}" alt="">` : catSvg(item.cat)}</div>
+        <div class="card-img">${item.photo ? `<img src="${item.photo}" alt="" onerror="imgFallback(this,'${item.cat}')">` : catSvg(item.cat)}</div>
         <div class="card-right">
           <div class="card-main">
             <div class="card-info">
