@@ -66,7 +66,7 @@ body { background: #f5f5f5; }
 .section-label { font-size: 11px; color: #888; letter-spacing: 0.08em; text-transform: uppercase; margin: 16px 0 8px; display: flex; align-items: center; justify-content: space-between; }
 .section-count { background: #e8e8e8; color: #888; font-size: 11px; padding: 2px 8px; border-radius: 10px; }
 .card { background: #fff; border-radius: 14px; margin-bottom: 10px; overflow: hidden; display: flex; align-items: stretch; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-.card-img { width: 80px; min-height: 80px; flex-shrink: 0; background: #f0f0f0; display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 28px; color: #c9bdb9; }
+.card-img { width: 80px; height: 80px; flex-shrink: 0; align-self: center; margin: 12px 0 12px 12px; border-radius: 12px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 28px; color: #c9bdb9; }
 .section-label .ic, .detail-cat .ic { margin-right: 4px; }
 .card-img img { width: 100%; height: 100%; object-fit: cover; }
 .card-body { flex: 1; padding: 10px 12px; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
@@ -163,6 +163,18 @@ body { background: #f5f5f5; }
 
 /* file input 用 visually-hidden 取代 display:none，iOS 拍照較穩定 */
 .vh { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
+/* 標題列右側動作區、外觀配色 */
+.header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.icon-btn { background: rgba(255,255,255,0.18); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; flex-shrink: 0; font-size: 17px; }
+.icon-btn:active { background: rgba(255,255,255,0.3); }
+.theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+.theme-swatch { display: flex; align-items: center; gap: 11px; padding: 14px; border: 1px solid #e5e5e5; border-radius: 12px; background: #fff; cursor: pointer; font-family: inherit; font-size: 14px; color: #333; }
+.theme-swatch.sel { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); }
+.theme-dot { width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.15); }
+.theme-name { flex: 1; text-align: left; display: flex; flex-direction: column; gap: 1px; }
+.theme-group { font-size: 11px; color: #aaa; }
+.theme-check { color: var(--brand-dark); font-weight: 700; font-size: 15px; }
 </style>
 </head>
 <body>
@@ -176,7 +188,10 @@ body { background: #f5f5f5; }
           <span id="trip-name">旅程</span>
           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
         </button>
-        <div class="rate-badge"><span class="rate-dot"></span><span id="rate-txt">載入中...</span></div>
+        <div class="header-actions">
+          <div class="rate-badge"><span class="rate-dot"></span><span id="rate-txt">載入中...</span></div>
+          <button class="icon-btn" onclick="goSettings()" aria-label="外觀配色"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/></svg></button>
+        </div>
       </div>
       <div class="tabs">
         <button class="tab active" onclick="filterCat('全部',this)">全部</button>
@@ -263,6 +278,17 @@ body { background: #f5f5f5; }
     <div class="add-scroll" id="trips-inner"></div>
   </div>
 
+  <div class="page off-right" id="page-settings">
+    <div class="sub-header">
+      <button class="btn-back" onclick="goList()" aria-label="返回"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+      <span class="sub-title">外觀配色</span>
+    </div>
+    <div class="add-scroll">
+      <div class="field-label">選擇喜歡的配色</div>
+      <div class="theme-grid" id="theme-grid"></div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -286,7 +312,8 @@ const ICON = {
   bag: svgIcon('<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>'),
   trash: svgIcon('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>'),
   clock: svgIcon('<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>'),
-  note: svgIcon('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>')
+  note: svgIcon('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'),
+  palette: svgIcon('<path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>')
 };
 function fmtDate(iso) {
   if (!iso) return '';
@@ -326,6 +353,27 @@ function migrateTrips() {
   saveTrips();
 }
 
+/* ---------- 配色主題（白字對比皆 ≥ 4.5） ---------- */
+const THEME_KEY = 'jp_theme_v1';
+const THEMES = {
+  terracotta: { name: '赤陶玫瑰', group: '柔和', brand: '#B5564A', dark: '#94372C', soft: '#FBEEED' },
+  rose:       { name: '玫瑰紅',   group: '柔和', brand: '#C24E72', dark: '#8A2C4E', soft: '#FBEAF0' },
+  lavender:   { name: '薰衣草紫', group: '柔和', brand: '#8560B0', dark: '#5E3E86', soft: '#F2ECF8' },
+  indigo:     { name: '靛藍',     group: '中性', brand: '#3E5C8A', dark: '#2C426B', soft: '#EAEFF7' },
+  teal:       { name: '墨綠',     group: '中性', brand: '#2E7D6B', dark: '#1E5A4C', soft: '#E6F2EF' },
+  graphite:   { name: '石墨灰',   group: '中性', brand: '#4B5563', dark: '#333A44', soft: '#EEF0F2' }
+};
+let curTheme = localStorage.getItem(THEME_KEY) || 'terracotta';
+function applyTheme(key) {
+  const t = THEMES[key] || THEMES.terracotta;
+  curTheme = THEMES[key] ? key : 'terracotta';
+  const r = document.documentElement.style;
+  r.setProperty('--brand', t.brand);
+  r.setProperty('--brand-dark', t.dark);
+  r.setProperty('--brand-soft', t.soft);
+  try { localStorage.setItem(THEME_KEY, curTheme); } catch(e) {}
+}
+
 function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -341,7 +389,7 @@ async function fetchRate() {
 }
 
 function showPage(id) {
-  ['page-list','page-add','page-detail','page-trips'].forEach(p => {
+  ['page-list','page-add','page-detail','page-trips','page-settings'].forEach(p => {
     const el = document.getElementById(p);
     if (p === id) { el.classList.remove('off-right','off-left'); }
     else if (id !== 'page-list' && p === 'page-list') { el.classList.add('off-left'); el.classList.remove('off-right'); }
@@ -403,6 +451,19 @@ function deleteTrip(id) {
   if (curTripId === id) curTripId = trips[0].id;
   save(); saveTrips(); updateTripName(); renderTrips();
 }
+
+/* ---------- 外觀配色 ---------- */
+function goSettings() { renderThemes(); showPage('page-settings'); }
+function renderThemes() {
+  const grid = document.getElementById('theme-grid');
+  grid.innerHTML = Object.entries(THEMES).map(([key, t]) => `
+    <button class="theme-swatch${key === curTheme ? ' sel' : ''}" onclick="pickTheme('${key}')">
+      <span class="theme-dot" style="background:${t.brand}"></span>
+      <span class="theme-name">${t.name}<span class="theme-group">${t.group}</span></span>
+      ${key === curTheme ? '<span class="theme-check">✓</span>' : ''}
+    </button>`).join('');
+}
+function pickTheme(key) { applyTheme(key); renderThemes(); }
 
 function goAdd(item) {
   editingId = item ? item.id : null;
@@ -663,7 +724,7 @@ function renderList() {
           </div>
           ${qty > 1 ? `<div class="card-unit">單價 ¥${item.price.toLocaleString()} × ${qty} 件</div>` : ''}
           ${item.time ? `<div class="card-date">${ICON.clock} ${fmtTime(item.time)}</div>` : ''}
-          ${item.note ? `<div class="card-note">${ICON.note}<span>${escapeHtml(item.note)}</span></div>` : ''}
+          ${item.note ? `<div class="card-note"><span>${escapeHtml(item.note)}</span></div>` : ''}
         </div>
       </div>`;
     });
@@ -678,6 +739,7 @@ function fillCatButtons() {
   });
 }
 
+applyTheme(curTheme);
 migrateTrips();
 updateTripName();
 fillCatButtons();
