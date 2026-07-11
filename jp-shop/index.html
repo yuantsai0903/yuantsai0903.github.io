@@ -568,19 +568,46 @@ function updateTWD() {
   }
 }
 
+function showPreview() {
+  document.getElementById('preview-img').src = photoDataUrl;
+  document.getElementById('photo-preview-wrap').style.display = 'block';
+  document.getElementById('photo-picker').style.display = 'none';
+  document.getElementById('retake-btn').style.display = 'block';
+}
+
 function handlePhoto(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = (ev) => {
-    photoDataUrl = ev.target.result;
-    const previewImg = document.getElementById('preview-img');
-    previewImg.src = photoDataUrl;
-    document.getElementById('photo-preview-wrap').style.display = 'block';
-    document.getElementById('photo-picker').style.display = 'none';
-    document.getElementById('retake-btn').style.display = 'block';
-    document.getElementById('f-name').focus();
+    const raw = ev.target.result;
+    // 選圖當下就實際解碼並壓成 JPEG：解得開才存，保證縮圖＝存進去的圖
+    const img = new Image();
+    img.onload = () => {
+      let photo = raw;
+      try {
+        const canvas = document.createElement('canvas');
+        const MAX = 600;
+        let w = img.naturalWidth, h = img.naturalHeight;
+        if (w && h) {
+          if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          const out = canvas.toDataURL('image/jpeg', 0.6);
+          if (out && out.length > 100) photo = out;
+        }
+      } catch(err) {}
+      photoDataUrl = photo;
+      showPreview();
+      document.getElementById('f-name').focus();
+    };
+    img.onerror = () => {
+      alert('這張照片沒辦法讀取（可能是 HEIC 格式或檔案太大）。\n請改用「從相簿選擇」，或重拍一張。');
+      resetPhoto();
+    };
+    img.src = raw;
   };
+  reader.onerror = () => { alert('讀取照片失敗，請再試一次。'); };
   reader.readAsDataURL(file);
 }
 
@@ -600,25 +627,8 @@ function saveItem() {
   if (!name) { alert('請輸入商品名稱'); return; }
   if (!price || price <= 0) { alert('請輸入正確的日幣價格'); return; }
 
-  let photo = null;
-  if (photoDataUrl) {
-    const img = document.getElementById('preview-img');
-    // 圖片尚未成功解碼（naturalWidth 為 0）時不硬壓，直接保留原圖，避免產生壞掉的空圖
-    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
-      try {
-        const canvas = document.createElement('canvas');
-        const MAX = 600;
-        let w = img.naturalWidth, h = img.naturalHeight;
-        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        const out = canvas.toDataURL('image/jpeg', 0.6);
-        photo = (out && out.length > 100) ? out : photoDataUrl;
-      } catch(e) { photo = photoDataUrl; }
-    } else {
-      photo = photoDataUrl;
-    }
-  }
+  // photoDataUrl 在選圖時已解碼並壓成 JPEG，這裡直接沿用
+  const photo = photoDataUrl || null;
 
   const note = document.getElementById('f-note').value.trim();
 
