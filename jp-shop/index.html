@@ -28,7 +28,11 @@ body { background: #f5f5f5; }
 .page.off-right { transform: translateX(100%); }
 .page.off-left { transform: translateX(-30%); pointer-events: none; }
 
-.header { background: var(--brand); padding: 14px 16px 0; position: sticky; top: 0; z-index: 10; }
+/* 列表頁：頭固定、中間捲動、底部按鈕固定 */
+#page-list { display: flex; flex-direction: column; overflow: hidden; }
+#page-list .list-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+
+.header { background: var(--brand); padding: 14px 16px 0; flex-shrink: 0; z-index: 10; }
 .header-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
 .app-title { color: #fff; font-size: 18px; font-weight: 500; }
 .rate-badge { background: rgba(255,255,255,0.18); color: #fff; font-size: 12px; padding: 4px 10px; border-radius: 20px; display: flex; align-items: center; gap: 5px; }
@@ -84,8 +88,8 @@ body { background: #f5f5f5; }
 .day-date { font-size: 22px; font-weight: 700; color: #222; line-height: 1.1; flex-shrink: 0; }
 .day-wd { font-size: 13px; color: #888; font-weight: 400; margin-left: 6px; }
 .day-total { background: var(--brand-soft); border-radius: 10px; padding: 7px 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
-.day-total-label { font-size: 11px; color: var(--brand-dark); font-weight: 500; }
-.day-total-amt { font-size: 16px; font-weight: 700; color: var(--brand-dark); }
+.day-total-amt { font-size: 16px; font-weight: 700; color: var(--brand-dark); display: flex; align-items: baseline; gap: 6px; }
+.day-total-cnt { font-size: 11px; font-weight: 500; color: var(--brand-dark); opacity: 0.7; }
 .day-total-twd { font-size: 11px; color: var(--brand-dark); opacity: 0.65; }
 .summary { background: #fff; border-radius: 14px; padding: 16px 18px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
 .summary-label { font-size: 12px; color: #888; margin-bottom: 3px; }
@@ -387,7 +391,7 @@ async function fetchRate() {
     const d = await r.json();
     if (d.rates && d.rates.TWD) { rate = parseFloat(d.rates.TWD.toFixed(4)); localStorage.setItem(RATE_KEY, rate); }
   } catch(e) {}
-  document.getElementById('rate-txt').textContent = '1 JPY = ' + rate + ' TWD';
+  document.getElementById('rate-txt').textContent = '¥100 ≈ NT$' + (rate * 100).toFixed(1);
 }
 
 function showPage(id) {
@@ -705,8 +709,7 @@ function renderList() {
     html += `<div class="day-header">
       <div class="day-date">${dayLabel(k)}</div>
       <div class="day-total">
-        <span class="day-total-label">當日合計 · ${group.length} 件</span>
-        <span class="day-total-amt">¥${dayJpy.toLocaleString()}</span>
+        <span class="day-total-amt">¥${dayJpy.toLocaleString()}<span class="day-total-cnt">${group.length} 件</span></span>
         <span class="day-total-twd">≈ NT$${dayTwd.toLocaleString()}</span>
       </div>
     </div>`;
@@ -714,6 +717,8 @@ function renderList() {
       const qty = item.qty || 1;
       const subtotal = subtotalOf(item);
       const twd = twdOf(item);
+      const unitTwd = Math.round(item.price * (item.rate || rate));
+      const multi = qty > 1;
       html += `<div class="card" onclick="openDetail(${item.id})">
         <div class="card-img">${item.photo ? `<img src="${item.photo}" alt="">` : catSvg(item.cat)}</div>
         <div class="card-right">
@@ -724,10 +729,10 @@ function renderList() {
               ${item.time ? `<div class="card-date">${ICON.clock} ${fmtTime(item.time)}</div>` : ''}
             </div>
             <div class="card-price">
-              <div class="price-jpy">¥${subtotal.toLocaleString()}</div>
+              <div class="price-jpy">¥${(multi ? item.price : subtotal).toLocaleString()}</div>
               <span class="tax-badge ${item.tax==='in'?'tax-in':'tax-out'}">${item.tax==='in'?'含稅':'未稅'}</span>
-              <div class="price-twd">≈ NT$${twd.toLocaleString()}</div>
-              ${qty > 1 ? `<div class="card-unit">¥${item.price.toLocaleString()} × ${qty}</div>` : ''}
+              <div class="price-twd">≈ NT$${(multi ? unitTwd : twd).toLocaleString()}</div>
+              ${multi ? `<div class="card-unit">× ${qty}　共 ¥${subtotal.toLocaleString()}</div>` : ''}
             </div>
           </div>
           ${item.note ? `<div class="card-note"><span>${escapeHtml(item.note)}</span></div>` : ''}
