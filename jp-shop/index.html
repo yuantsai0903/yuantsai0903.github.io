@@ -194,6 +194,12 @@ body { background: #f5f5f5; }
 .theme-name { flex: 1; text-align: left; display: flex; flex-direction: column; gap: 1px; }
 .theme-group { font-size: 11px; color: #aaa; }
 .theme-check { color: var(--brand-dark); font-weight: 700; font-size: 15px; }
+
+/* 資料備份 */
+.backup-note { font-size: 12px; color: #888; line-height: 1.65; background: #f0f0f0; border-radius: 10px; padding: 11px 13px; margin-bottom: 12px; }
+.backup-note b { color: var(--brand-dark); }
+.btn-backup { width: 100%; padding: 13px; border-radius: 12px; font-size: 15px; font-weight: 500; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; border: 1px solid var(--brand); background: var(--brand); color: #fff; }
+.btn-backup.ghost { background: #fff; color: var(--brand-dark); border-color: #ddd; }
 </style>
 </head>
 <body>
@@ -303,11 +309,17 @@ body { background: #f5f5f5; }
   <div class="page off-right" id="page-settings">
     <div class="sub-header">
       <button class="btn-back" onclick="goList()" aria-label="返回"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
-      <span class="sub-title">外觀配色</span>
+      <span class="sub-title">設定</span>
     </div>
     <div class="add-scroll">
-      <div class="field-label">選擇喜歡的配色</div>
+      <div class="field-label">外觀配色</div>
       <div class="theme-grid" id="theme-grid"></div>
+
+      <div class="field-label" style="margin-top:26px">資料備份</div>
+      <div class="backup-note" id="backup-stat"></div>
+      <button class="btn-backup" onclick="exportBackup()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> 匯出備份檔</button>
+      <button class="btn-backup ghost" onclick="triggerImport()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg> 匯入備份</button>
+      <input type="file" id="file-import" accept="application/json,.json" class="vh" onchange="handleImport(event)">
     </div>
   </div>
 
@@ -477,8 +489,8 @@ function deleteTrip(id) {
   save(); saveTrips(); updateTripName(); renderTrips();
 }
 
-/* ---------- 外觀配色 ---------- */
-function goSettings() { renderThemes(); showPage('page-settings'); }
+/* ---------- 設定：外觀配色 ---------- */
+function goSettings() { renderThemes(); renderBackupStat(); showPage('page-settings'); }
 function renderThemes() {
   const grid = document.getElementById('theme-grid');
   grid.innerHTML = Object.entries(THEMES).map(([key, t]) => `
@@ -489,6 +501,54 @@ function renderThemes() {
     </button>`).join('');
 }
 function pickTheme(key) { applyTheme(key); renderThemes(); }
+
+/* ---------- 設定：資料備份（匯出 / 匯入） ---------- */
+function renderBackupStat() {
+  const el = document.getElementById('backup-stat');
+  if (el) el.innerHTML = `資料只存在這支手機的瀏覽器，換手機或清除快取就會不見。建議偶爾匯出備份（可存雲端或傳 Line 給自己）。<br><br>目前共 <b>${trips.length}</b> 趟旅程 ・ <b>${items.length}</b> 筆商品。`;
+}
+function exportBackup() {
+  const data = { app: 'jp-shop', version: 1, exportedAt: new Date().toISOString(), rate, theme: curTheme, curTripId, trips, items };
+  const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const d = new Date(), pad = n => String(n).padStart(2, '0');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `旅買記備份_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.json`;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 200);
+}
+function triggerImport() { document.getElementById('file-import').click(); }
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    let data;
+    try { data = JSON.parse(ev.target.result); } catch(err) { alert('備份檔格式不正確，無法讀取。'); e.target.value = ''; return; }
+    if (!data || !Array.isArray(data.items) || !Array.isArray(data.trips) || !data.trips.length) {
+      alert('這不是有效的旅買記備份檔。'); e.target.value = ''; return;
+    }
+    if (!confirm(`確定要匯入備份嗎？\n將以備份內容「取代」目前全部資料：\n・${data.trips.length} 趟旅程\n・${data.items.length} 筆商品\n\n目前手機上的資料會被覆蓋，無法復原。`)) { e.target.value = ''; return; }
+    items = data.items;
+    trips = data.trips;
+    curTripId = (data.curTripId && trips.find(t => t.id === data.curTripId)) ? data.curTripId : trips[0].id;
+    if (typeof data.rate === 'number' && data.rate > 0) {
+      rate = data.rate;
+      try { localStorage.setItem(RATE_KEY, rate); } catch(e2) {}
+      document.getElementById('rate-txt').textContent = '¥100 ≈ NT$' + (rate * 100).toFixed(1);
+    }
+    save(); saveTrips();
+    if (data.theme) applyTheme(data.theme);
+    migrateTrips(); updateTripName();
+    e.target.value = '';
+    currentCat = '全部';
+    alert('匯入完成！');
+    goList();
+  };
+  reader.onerror = () => { alert('讀取備份檔失敗，請再試一次。'); };
+  reader.readAsText(file);
+}
 
 function goAdd(item) {
   editingId = item ? item.id : null;
