@@ -92,6 +92,9 @@ body { background: #f5f5f5; }
 .card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .card-name { font-size: 14px; font-weight: 500; color: #222; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .card-cat { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #888; }
+.card-store { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--brand-dark); min-width: 0; }
+.card-store span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-store .ic { flex-shrink: 0; opacity: 0.8; }
 .card-date { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #aaa; }
 .card-price { flex-shrink: 0; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 .card-price .price-jpy { font-size: 17px; font-weight: 600; color: #222; }
@@ -248,7 +251,7 @@ body { background: #f5f5f5; }
       <div class="list-controls" id="list-controls">
         <div class="search-box">
           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input id="search-input" type="text" placeholder="搜尋名稱或備註" oninput="setSearch(this.value)" autocomplete="off">
+          <input id="search-input" type="text" placeholder="搜尋名稱／店家／備註" oninput="setSearch(this.value)" autocomplete="off">
           <button class="search-clear" id="search-clear" onclick="clearSearch()" aria-label="清除">×</button>
         </div>
         <select class="sort-sel" id="sort-sel" onchange="setSort(this.value)">
@@ -309,8 +312,12 @@ body { background: #f5f5f5; }
         <button class="cat-btn" onclick="setCat('其他',this)" data-cat="其他"></button>
       </div>
 
+      <div class="field-label">商店／地點（選填）</div>
+      <input class="field-input" id="f-store" list="store-list" placeholder="例：松本清、唐吉訶德" autocomplete="off">
+      <datalist id="store-list"></datalist>
+
       <div class="field-label">備註（選填）</div>
-      <input class="field-input" id="f-note" placeholder="例：松本清二樓有看到">
+      <input class="field-input" id="f-note" placeholder="例：二樓有看到、特價中">
     </div>
     <div class="form-footer">
       <button class="btn-save" id="save-btn" onclick="saveItem()">儲存商品</button>
@@ -382,7 +389,8 @@ const ICON = {
   clock: svgIcon('<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>'),
   note: svgIcon('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'),
   palette: svgIcon('<path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z"/><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>'),
-  toy: svgIcon('<rect width="7" height="7" x="14" y="3" rx="1"/><path d="M10 21V8a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H10"/>')
+  toy: svgIcon('<rect width="7" height="7" x="14" y="3" rx="1"/><path d="M10 21V8a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H10"/>'),
+  pin: svgIcon('<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>')
 };
 function fmtDate(iso) {
   if (!iso) return '';
@@ -562,11 +570,11 @@ function csvCell(v) {
 function exportCsv() {
   if (!items.length) { alert('目前沒有任何商品可以匯出。'); return; }
   const tripName = id => { const t = trips.find(x => x.id === id); return t ? t.name : ''; };
-  const header = ['日期', '旅程', '商品', '分類', '日幣單價', '數量', '日幣小計', '台幣小計', '稅別', '備註'];
+  const header = ['日期', '旅程', '商品', '分類', '商店', '日幣單價', '數量', '日幣小計', '台幣小計', '稅別', '備註'];
   const rows = items.slice().sort((a, b) => new Date(a.time) - new Date(b.time)).map(i => {
     const qty = i.qty || 1, sub = i.price * qty, twd = Math.round(sub * (i.rate || rate));
     const date = i.time ? new Date(i.time).toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }) : '';
-    return [date, tripName(i.tripId), i.name, i.cat, i.price, qty, sub, twd, i.tax === 'in' ? '含稅' : '未稅', i.note || ''];
+    return [date, tripName(i.tripId), i.name, i.cat, i.store || '', i.price, qty, sub, twd, i.tax === 'in' ? '含稅' : '未稅', i.note || ''];
   });
   const csv = [header, ...rows].map(r => r.map(csvCell).join(',')).join('\r\n');
   const BOM = String.fromCharCode(0xFEFF); // 讓 Excel 正確辨識 UTF-8 中文
@@ -612,7 +620,11 @@ function goAdd(item) {
   document.getElementById('f-name').value = item ? item.name : '';
   document.getElementById('f-price').value = item ? item.price : '';
   document.getElementById('f-qty').value = item ? (item.qty || 1) : 1;
+  document.getElementById('f-store').value = item ? (item.store || '') : '';
   document.getElementById('f-note').value = item ? (item.note || '') : '';
+  // 商店自動完成：帶入過去用過的店名
+  const stores = [...new Set(items.map(i => i.store).filter(Boolean))];
+  document.getElementById('store-list').innerHTML = stores.map(s => `<option value="${escapeHtml(s)}"></option>`).join('');
   updateTWD();
 
   photoDataUrl = item ? item.photo : null;
@@ -745,17 +757,18 @@ function saveItem() {
   const photo = photoDataUrl || null;
 
   const note = document.getElementById('f-note').value.trim();
+  const store = document.getElementById('f-store').value.trim();
 
   if (editingId) {
     const idx = items.findIndex(i => i.id === editingId);
     if (idx !== -1) {
-      items[idx] = { ...items[idx], name, price, qty, tax: selTax, cat: selCat, note, photo };
+      items[idx] = { ...items[idx], name, price, qty, tax: selTax, cat: selCat, store, note, photo };
     }
     editingId = null;
     save();
     openDetail(items[idx].id);
   } else {
-    items.unshift({ id: Date.now(), name, price, qty, tax: selTax, cat: selCat, note, photo, rate, time: new Date().toISOString(), tripId: curTripId });
+    items.unshift({ id: Date.now(), name, price, qty, tax: selTax, cat: selCat, store, note, photo, rate, time: new Date().toISOString(), tripId: curTripId });
     save();
     goList();
   }
@@ -781,6 +794,7 @@ function openDetail(id) {
       </div>
       ${qty > 1 ? `<div class="info-row"><span class="info-label">單價</span><span>¥${item.price.toLocaleString()} × ${qty}</span></div>` : ''}
       <div class="info-row"><span class="info-label">數量</span><span style="font-size:17px;font-weight:700;color:var(--brand-dark)">${qty}</span></div>
+      ${item.store ? `<div class="info-row"><span class="info-label">商店／地點</span><span>${ICON.pin} ${escapeHtml(item.store)}</span></div>` : ''}
       ${item.note ? `<div class="info-row"><span class="info-label">備註</span><span>${escapeHtml(item.note)}</span></div>` : ''}
       <div class="info-row"><span class="info-label">記錄時間</span><span>${date}</span></div>
       <div style="display:flex; gap:8px; margin-top:16px;">
@@ -866,6 +880,7 @@ function cardHtml(item, showDate) {
         <div class="card-info">
           <div class="card-name">${escapeHtml(item.name)}</div>
           <div class="card-cat">${catSvg(item.cat)} ${item.cat}</div>
+          ${item.store ? `<div class="card-store">${ICON.pin} <span>${escapeHtml(item.store)}</span></div>` : ''}
           ${item.time ? `<div class="card-date">${ICON.clock} ${when}</div>` : ''}
         </div>
         <div class="card-price">
@@ -890,7 +905,7 @@ function renderList() {
   let filtered = currentCat === '全部' ? tripItems : tripItems.filter(i => i.cat === currentCat);
   if (searchTerm) {
     const q = searchTerm.toLowerCase();
-    filtered = filtered.filter(i => (i.name || '').toLowerCase().includes(q) || (i.note || '').toLowerCase().includes(q));
+    filtered = filtered.filter(i => (i.name || '').toLowerCase().includes(q) || (i.store || '').toLowerCase().includes(q) || (i.note || '').toLowerCase().includes(q));
   }
 
   if (!filtered.length) {
